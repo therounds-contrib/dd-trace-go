@@ -25,7 +25,7 @@ type Option func(*config)
 
 func defaults(cfg *config) {
 	cfg.serviceName = "fiber"
-	cfg.isStatusError = isServerError
+	cfg.isStatusError = globalconfig.IsHTTPServerError(statusCode)
 
 	if svc := globalconfig.ServiceName(); svc != "" {
 		cfg.serviceName = svc
@@ -80,8 +80,4 @@ func WithStatusCheck(fn func(statusCode int) bool) Option {
 	return func(cfg *config) {
 		cfg.isStatusError = fn
 	}
-}
-
-func isServerError(statusCode int) bool {
-	return statusCode >= 500 && statusCode < 600
 }
