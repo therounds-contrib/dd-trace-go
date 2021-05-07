@@ -74,3 +74,29 @@ func WrapHandler(h http.Handler, service, resource string, opts ...Option) http.
 		})
 	})
 }
+
+// WrapHandlerWithResourceNamer wraps an http.Handler with tracing using the
+// given service and resource namer function.
+func WrapHandlerWithResourceNamer(
+	h http.Handler,
+	service string,
+	resourceNamer func(*http.Request) string,
+	opts ...Option,
+) http.Handler {
+	cfg := new(config)
+	defaults(cfg)
+	for _, fn := range opts {
+		fn(cfg)
+	}
+	log.Debug("contrib/net/http: Wrapping Handler: Service: %s, %#v", service, cfg)
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		httputil.TraceAndServe(h, &httputil.TraceConfig{
+			ResponseWriter: w,
+			Request:        req,
+			Service:        service,
+			Resource:       resourceNamer(req),
+			FinishOpts:     cfg.finishOpts,
+			SpanOpts:       cfg.spanOpts,
+		})
+	})
+}
